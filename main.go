@@ -22,10 +22,9 @@ func Execute(configPath string) {
 	}
 
 	log := GetLogger(config.LogConfig)
-	manager := NewManager(*config, log)
 
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		Handler(w, r, manager, log)
+		Handler(w, r, config, log)
 	})
 
 	log.Info().Str("addr", config.ListenAddress).Msg("Listening")
@@ -35,12 +34,14 @@ func Execute(configPath string) {
 	}
 }
 
-func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zerolog.Logger) {
+func Handler(w http.ResponseWriter, r *http.Request, config *Config, log *zerolog.Logger) {
 	requestStart := time.Now()
 
 	sublogger := log.With().
 		Str("request-id", uuid.New().String()).
 		Logger()
+
+	manager := NewManager(*config, &sublogger)
 
 	queriesCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

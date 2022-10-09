@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -194,8 +195,14 @@ func (rpc *RPC) GetSlashingParams() (*SlashingParamsResponse, *QueryInfo, error)
 }
 
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
+	timeout := time.Duration(rpc.Timeout) * time.Second
 	client := &http.Client{
-		Timeout: time.Duration(rpc.Timeout) * time.Second,
+		Transport: &http.Transport{
+			Dial: func(network, addr string) (net.Conn, error) {
+				return net.DialTimeout(network, addr, timeout)
+			},
+		},
+		Timeout: timeout,
 	}
 	start := time.Now()
 
