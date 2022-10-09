@@ -287,7 +287,13 @@ func Handler(w http.ResponseWriter, r *http.Request, config *Config, log *zerolo
 	registry.MustRegister(missedBlocksGauge)
 	registry.MustRegister(missedBlocksPercentGauge)
 
+	timeSinceStart := time.Now()
+
 	validators := manager.GetAllValidators()
+	sublogger.Trace().
+		Dur("duration", time.Since(timeSinceStart)).
+		Msg("Got manager response")
+
 	for _, validator := range validators {
 		queriesCountGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
